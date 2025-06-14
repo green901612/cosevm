@@ -1,9 +1,19 @@
+> [!tip]
+> This repository has been archived and is no longer maintained.  
+> [Ignite ClI](https://github.com/ignite/cli) is now supports building minimal chains.  
+> Run `ignite s chain mini --minimal` to create a minimal chain.
+
 # Mini - A minimal Cosmos SDK chain
 
 This repository contains an example of a tiny, but working Cosmos SDK chain.
 It uses the least modules possible and is intended to be used as a starting point for building your own chain, without all the boilerplate that other tools generate. It is a simpler version of Cosmos SDK's [simapp](https://github.com/cosmos/cosmos-sdk/tree/main/simapp).
 
-`Minid` uses the **latest** version of the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk).
+This branch of `Minid` uses [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) v0.50.x.
+
+> [!note]
+> Minid for [Cosmos SDK v0.50.x](https://github.com/cosmonity/chain-minimal/blob/v0.50.x)  
+> Minid for [Cosmos SDK v0.52.x](https://github.com/cosmonity/chain-minimal/blob/v0.52.x)  
+> Minid for [Cosmos SDK v2](https://github.com/cosmonity/chain-minimal/blob/v2). Learn what v2 was [in this comparison](https://gist.github.com/julienrbrt/6f737f275f784c5540dcbd64dfa982a5) and [talk](https://www.youtube.com/watch?v=Am6eDVRVZSw).  
 
 ## How to use
 
