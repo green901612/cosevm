@@ -1,4 +1,4 @@
-module github.com/cosmosregistry/chain-minimal
+module github.com/green901612/cosevm
 
 go 1.23
 

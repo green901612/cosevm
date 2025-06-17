@@ -22,7 +22,7 @@ import (
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/cosmosregistry/chain-minimal/app"
+	"github.com/green901612/cosevm/app"
 )
 
 // NewRootCmd creates a new root command for minid. It is called once in the

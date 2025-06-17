@@ -7,9 +7,9 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"github.com/cosmosregistry/chain-minimal/app"
-	"github.com/cosmosregistry/chain-minimal/app/params"
-	"github.com/cosmosregistry/chain-minimal/cmd/minid/cmd"
+	"github.com/green901612/cosevm/app"
+	"github.com/green901612/cosevm/app/params"
+	"github.com/green901612/cosevm/cmd/cosevmd/cmd"
 )
 
 func main() {

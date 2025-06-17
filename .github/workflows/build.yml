@@ -1,4 +1,4 @@
-name: Build Mini
+name: Build CosEvm
 on: ["push"]
 jobs:
   build:
@@ -10,7 +10,7 @@ jobs:
         include:
           - targetos: darwin
             arch: arm64
-    name: mini ${{ matrix.arch }} for ${{ matrix.targetos }}
+    name: cosevm ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5.0.2
@@ -21,13 +21,13 @@ jobs:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
 
-      - name: Compile mini
+      - name: Compile cosevm
         run: |
           go mod download
-          cd cmd/minid
+          cd cmd/cosevmd
           go build .
 
       - uses: actions/upload-artifact@v4
         with:
-          name: minid ${{ matrix.targetos }} ${{ matrix.arch }}
-          path: cmd/minid/minid
+          name: cosevmd ${{ matrix.targetos }} ${{ matrix.arch }}
+          path: cmd/cosevmd/cosevmd
