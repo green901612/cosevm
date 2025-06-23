@@ -25,12 +25,12 @@ var (
 
 const (
 	// MainnetChainID defines the Evmos EIP155 chain ID for mainnet
-	MainnetChainID = "evmos_9001"
+	MainnetChainID = "torram_2929"
 	// TestnetChainID defines the Evmos EIP155 chain ID for testnet
-	TestnetChainID = "evmos_9000"
+	TestnetChainID = "torram_2930"
 	// TestingChainID defines the Evmos EIP155 chain ID for testing purposes
 	// like the local node.
-	DevnetChainID = "evmos_9002"
+	DevnetChainID = "torram_2931"
 )
 
 // DeriveChainID derives the chain id from the given v parameter.

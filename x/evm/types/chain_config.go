@@ -18,9 +18,6 @@ import (
 	"github.com/green901612/cosevm/utils"
 )
 
-// testChainID represents the ChainID used for the purpose of testing.
-const testChainID string = "evmos_9002-1"
-
 // chainConfig is the chain configuration used in the EVM to defined which
 // opcodes are active based on Ethereum upgrades.
 var chainConfig *ChainConfig
@@ -61,7 +58,7 @@ func (cc ChainConfig) EthereumConfig(chainID *big.Int) *geth.ChainConfig {
 
 func DefaultChainConfig(chainID string) *ChainConfig {
 	if chainID == "" {
-		chainID = testChainID
+		chainID = utils.DevnetChainID
 	}
 
 	eip155ChainID, err := utils.ParseChainID(chainID)
