@@ -29,6 +29,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	evmkeeper "github.com/green901612/cosevm/x/evm/keeper"
+	feemarketkeeper "github.com/green901612/cosevm/x/feemarket/keeper"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	_ "cosmossdk.io/api/cosmos/tx/config/v1"          // import for side-effects
@@ -39,6 +41,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"   // import for side-effects
 	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import for side-effects
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import for side-effects
+	_ "github.com/green901612/cosevm/x/evm"        // import for side-effects
+	_ "github.com/green901612/cosevm/x/feemarket"        // import for side-effects
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -68,6 +72,9 @@ type MiniApp struct {
 	StakingKeeper         *stakingkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
+	
+	EvmKeeper							*evmkeeper.Keeper
+	Feemarketkeeper				feemarketkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -128,6 +135,8 @@ func NewMiniApp(
 		&app.StakingKeeper,
 		&app.DistrKeeper,
 		&app.ConsensusParamsKeeper,
+		&app.EvmKeeper,
+		&app.FeemarketKeeper
 	); err != nil {
 		return nil, err
 	}
