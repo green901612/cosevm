@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-minid:
+  test-cosevmd:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -31,10 +31,10 @@ jobs:
         run: |
           make install
           make init
-          minid start &
+          cosevmd start &
           MINID_PID=$!
           cnt=0
-          while ! minid query block --type=height 5; do
+          while ! cosevmd query block --type=height 5; do
             cnt=$((cnt + 1))
             if [ $cnt -gt 30 ]; then
               kill -9 "$MINID_PID"
