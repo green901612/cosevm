@@ -79,5 +79,5 @@ var ChainsCoinInfo = map[string]EvmCoinInfo{
 		Denom:        params.BaseDenom,
 		DisplayDenom: params.DisplayDenom,
 		Decimals:     EighteenDecimals,
-	}
+	},
 }

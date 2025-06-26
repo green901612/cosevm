@@ -25,7 +25,7 @@ import (
 	"github.com/green901612/cosevm/app"
 )
 
-// NewRootCmd creates a new root command for minid. It is called once in the
+// NewRootCmd creates a new root command for cosevmd. It is called once in the
 // main function.
 func NewRootCmd() *cobra.Command {
 	var (
@@ -51,8 +51,8 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "minid",
-		Short: "minid - the minimal chain app",
+		Use:   "cosevmd",
+		Short: "cosevmd - the cosmos evm chain app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())

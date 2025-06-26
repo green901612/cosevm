@@ -18,6 +18,13 @@ const (
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
 	Bech32PrefixAccAddr = "cose"
+
+	BaseDenom        string = "cose"
+	BaseDenomTestnet string = "cose"
+	DisplayDenom        string = "cose"
+	DisplayDenomTestnet string = "cose"
+	DefaultGasPrice = 20
+	BaseDenomUnit = 18
 )
 
 var (
@@ -39,11 +46,11 @@ func init() {
 }
 
 func RegisterDenoms() {
-	err := sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
+	err := sdk.RegisterDenom(HumanCoinUnit, math.LegacyOneDec())
 	if err != nil {
 		panic(err)
 	}
-	err = sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, BaseCoinUnitExponent))
+	err = sdk.RegisterDenom(BaseCoinUnit, math.LegacyNewDecWithPrec(1, int64(BaseCoinUnitExponent)))
 	if err != nil {
 		panic(err)
 	}

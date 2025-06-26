@@ -74,7 +74,7 @@ type MiniApp struct {
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	
 	EvmKeeper							*evmkeeper.Keeper
-	Feemarketkeeper				feemarketkeeper.Keeper
+	FeemarketKeeper				feemarketkeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -83,7 +83,7 @@ type MiniApp struct {
 func init() {
 	var err error
 	clienthelpers.EnvPrefix = "MINI"
-	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".minid")
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".cosevmd")
 	if err != nil {
 		panic(err)
 	}
@@ -136,7 +136,7 @@ func NewMiniApp(
 		&app.DistrKeeper,
 		&app.ConsensusParamsKeeper,
 		&app.EvmKeeper,
-		&app.FeemarketKeeper
+		&app.FeemarketKeeper,
 	); err != nil {
 		return nil, err
 	}

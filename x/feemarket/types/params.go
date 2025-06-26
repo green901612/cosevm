@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/ethereum/go-ethereum/params"
 )
 
 var (
@@ -21,6 +20,11 @@ var (
 	DefaultEnableHeight = int64(0)
 	// DefaultNoBaseFee is false
 	DefaultNoBaseFee = false
+)
+
+const (
+	ElasticityMultiplier = 2
+	BaseFeeChangeDenominator = 8
 )
 
 // Parameter keys
@@ -78,8 +82,8 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		NoBaseFee:                DefaultNoBaseFee,
-		BaseFeeChangeDenominator: params.BaseFeeChangeDenominator,
-		ElasticityMultiplier:     params.ElasticityMultiplier,
+		BaseFeeChangeDenominator: BaseFeeChangeDenominator,
+		ElasticityMultiplier:     ElasticityMultiplier,
 		BaseFee:                  DefaultBaseFee,
 		EnableHeight:             DefaultEnableHeight,
 		MinGasPrice:              DefaultMinGasPrice,

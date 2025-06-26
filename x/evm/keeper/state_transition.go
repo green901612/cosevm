@@ -13,14 +13,121 @@ import (
 
 	"github.com/green901612/cosevm/x/evm/statedb"
 	"github.com/green901612/cosevm/x/evm/types"
+	"github.com/green901612/cosevm/utils"
+	apptypes "github.com/green901612/cosevm/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	evmoscore "github.com/green901612/cosevm/x/evm/core/utils"
 	"github.com/green901612/cosevm/x/evm/core/vm"
+	evmutils "github.com/green901612/cosevm/x/evm/core/utils"
 )
+
+// NewEVM generates a go-ethereum VM from the provided Message fields and the chain parameters
+// (ChainConfig and module Params). It additionally sets the validator operator address as the
+// coinbase address to make it available for the COINBASE opcode, even though there is no
+// beneficiary of the coinbase transaction (since we're not mining).
+//
+// NOTE: the RANDOM opcode is currently not supported since it requires
+// RANDAO implementation. See https://github.com/evmos/ethermint/pull/1520#pullrequestreview-1200504697
+// for more information.
+func (k *Keeper) NewEVM(
+	ctx sdk.Context,
+	msg core.Message,
+	cfg *statedb.EVMConfig,
+	tracer vm.EVMLogger,
+	stateDB vm.StateDB,
+) *vm.EVM {
+	blockCtx := vm.BlockContext{
+		CanTransfer: evmutils.CanTransfer,
+		Transfer:    evmutils.Transfer,
+		GetHash:     k.GetHashFn(ctx),
+		Coinbase:    cfg.CoinBase,
+		GasLimit:    apptypes.BlockGasLimit(ctx),
+		BlockNumber: big.NewInt(ctx.BlockHeight()),
+		Time:        big.NewInt(ctx.BlockHeader().Time.Unix()),
+		Difficulty:  big.NewInt(0), // unused. Only required in PoW context
+		BaseFee:     cfg.BaseFee,
+		Random:      nil, // not supported
+	}
+
+	txCtx := evmutils.NewEVMTxContext(msg)
+	if tracer == nil {
+		tracer = k.Tracer(ctx, msg, cfg.ChainConfig)
+	}
+	vmConfig := k.VMConfig(ctx, msg, cfg, tracer)
+
+	signer := msg.From()
+	accessControl := types.NewRestrictedPermissionPolicy(&cfg.Params.AccessControl, signer)
+
+	// Set hooks for the EVM opcodes
+	evmHooks := types.NewDefaultOpCodesHooks()
+	evmHooks.AddCreateHooks(
+		accessControl.GetCreateHook(signer),
+	)
+	// evmHooks.AddCallHooks(
+	// 	accessControl.GetCallHook(signer),
+	// 	k.GetPrecompilesCallHook(ctx),
+	// )
+	return vm.NewEVMWithHooks(evmHooks, blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig)
+}
+
+// GetHashFn implements vm.GetHashFunc for Ethermint. It handles 3 cases:
+//  1. The requested height matches the current height from context (and thus same epoch number)
+//  2. The requested height is from an previous height from the same chain epoch
+//  3. The requested height is from a height greater than the latest one
+func (k Keeper) GetHashFn(ctx sdk.Context) vm.GetHashFunc {
+	return func(height uint64) common.Hash {
+		h, err := utils.SafeInt64(height)
+		if err != nil {
+			k.Logger(ctx).Error("failed to cast height to int64", "error", err)
+			return common.Hash{}
+		}
+
+		switch {
+		case ctx.BlockHeight() == h:
+			// Case 1: The requested height matches the one from the context so we can retrieve the header
+			// hash directly from the context.
+			// Note: The headerHash is only set at begin block, it will be nil in case of a query context
+			headerHash := ctx.HeaderHash()
+			if len(headerHash) != 0 {
+				return common.BytesToHash(headerHash)
+			}
+
+			// only recompute the hash if not set (eg: checkTxState)
+			contextBlockHeader := ctx.BlockHeader()
+			header, err := cmttypes.HeaderFromProto(&contextBlockHeader)
+			if err != nil {
+				k.Logger(ctx).Error("failed to cast tendermint header from proto", "error", err)
+				return common.Hash{}
+			}
+
+			headerHash = header.Hash()
+			return common.BytesToHash(headerHash)
+
+		case ctx.BlockHeight() > h:
+			// Case 2: if the chain is not the current height we need to retrieve the hash from the store for the
+			// current chain epoch. This only applies if the current height is greater than the requested height.
+			histInfo, err := k.stakingKeeper.GetHistoricalInfo(ctx, h)
+			if err != nil {
+				k.Logger(ctx).Debug("error while getting historical info", "height", h, "error", err.Error())
+				return common.Hash{}
+			}
+
+			header, err := cmttypes.HeaderFromProto(&histInfo.Header)
+			if err != nil {
+				k.Logger(ctx).Error("failed to cast tendermint header from proto", "error", err)
+				return common.Hash{}
+			}
+
+			return common.BytesToHash(header.Hash())
+		default:
+			// Case 3: heights greater than the current one returns an empty hash.
+			return common.Hash{}
+		}
+	}
+}
 
 // ApplyTransaction runs and attempts to perform a state transition with the given transaction (i.e Message), that will
 // only be persisted (committed) to the underlying KVStore if the transaction does not fail.

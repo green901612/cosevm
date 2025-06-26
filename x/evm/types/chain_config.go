@@ -4,7 +4,7 @@
 // This config provides a convenient way to modify x/evm params and values.
 // Its primary purpose is to be used during application initialization.
 
-package utils
+package types
 
 import (
 	"errors"
