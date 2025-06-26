@@ -18,13 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -34,7 +34,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	appparams "github.com/green901612/cosevm/app/params"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	_ "cosmossdk.io/api/cosmos/tx/config/v1"          // import for side-effects
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import for side-effects
@@ -55,6 +54,13 @@ var AppConfigYAML []byte
 var (
 	_ runtime.AppI            = (*MiniApp)(nil)
 	_ servertypes.Application = (*MiniApp)(nil)
+)
+
+const (
+	BaseDenomUnit = 18
+	ChainID       = "cosevm_2929-1"
+	BaseDenom     = "cose"
+	DisplayDenom  = "cose"
 )
 
 // MiniApp extends an ABCI application, but with most of its parameters exported.
@@ -86,7 +92,7 @@ func init() {
 		panic(err)
 	}
 
-	sdk.DefaultPowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(appparams.BaseDenomUnit), nil))
+	sdk.DefaultPowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(BaseDenomUnit), nil))
 }
 
 // AppConfig returns the default app config.

@@ -12,13 +12,10 @@ import (
 const (
 	CoinUnit = "cose"
 
-	DefaultBondDenom = CoinUnit.
-	BaseDenomUnit = 18
+	DefaultBondDenom = CoinUnit
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
 	Bech32PrefixAccAddr = "cose"
-
-	ChainID = "cosevm_2929-1"
 )
 
 var (
