@@ -8,6 +8,10 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 	// Downgraded to avoid bugs in following commits which caused simulations to fail.
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+
+	cosmossdk.io/store => github.com/cosmos/cosmos-sdk/store v1.1.2-0.20250319183239-53dea340efc7
+	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.50.13-0.20250319183239-53dea340efc7
+	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.10.26-evmos-rc4
 )
 
 require (
@@ -25,6 +29,12 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
+
+	github.com/ethereum/go-ethereum v1.10.26
+	// for ibc functionality in EVM
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.1.1
+	github.com/cosmos/ibc-go/modules/capability v1.0.1
+	github.com/cosmos/ibc-go/v8 v8.7.0
 )
 
 require (
