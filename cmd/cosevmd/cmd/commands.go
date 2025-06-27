@@ -101,10 +101,7 @@ func txCommand() *cobra.Command {
 // newApp is an appCreator
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
-	app, err := app.NewMiniApp(logger, db, traceStore, true, appOpts, baseappOptions...)
-	if err != nil {
-		panic(err)
-	}
+	app := app.NewCosevmApp(logger, db, traceStore, true, appOpts, app.EVMAppOptions, baseappOptions...)
 
 	return app
 }
@@ -121,8 +118,7 @@ func appExport(
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	var (
-		miniApp *app.MiniApp
-		err     error
+		miniApp *app.CosevmApp
 	)
 
 	// this check is necessary as we use the flag in x/upgrade.
@@ -142,19 +138,13 @@ func appExport(
 	appOpts = viperAppOpts
 
 	if height != -1 {
-		miniApp, err = app.NewMiniApp(logger, db, traceStore, false, appOpts)
-		if err != nil {
-			return servertypes.ExportedApp{}, err
-		}
+		miniApp = app.NewCosevmApp(logger, db, traceStore, false, appOpts, app.EVMAppOptions)
 
 		if err := miniApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		miniApp, err = app.NewMiniApp(logger, db, traceStore, true, appOpts)
-		if err != nil {
-			return servertypes.ExportedApp{}, err
-		}
+		miniApp = app.NewCosevmApp(logger, db, traceStore, true, appOpts, app.EVMAppOptions)
 	}
 
 	return miniApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

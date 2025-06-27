@@ -1,4 +1,4 @@
-package example_chain
+package app
 
 import (
 	"encoding/json"
@@ -221,8 +221,8 @@ type CosevmApp struct {
 	configurator module.Configurator
 }
 
-// NewExampleApp returns a reference to an initialized CosevmApp.
-func NewExampleApp(
+// NewCosevmApp returns a reference to an initialized CosevmApp.
+func NewCosevmApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -709,10 +709,6 @@ func NewExampleApp(
 	if err = app.ModuleManager.RegisterServices(app.configurator); err != nil {
 		panic(fmt.Sprintf("failed to register services in module manager: %s", err.Error()))
 	}
-
-	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
-	app.RegisterUpgradeHandlers()
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
