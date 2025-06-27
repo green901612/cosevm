@@ -25,8 +25,45 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	evmcmd "github.com/cosmos/evm/client"
+	evmserver "github.com/cosmos/evm/server"
+	evmserverconfig "github.com/cosmos/evm/server/config"
+	srvflags "github.com/cosmos/evm/server/flags"
+
 	"github.com/green901612/cosevm/app"
 )
+
+// Update CustomAppConfig struct
+type CustomAppConfig struct {
+	serverconfig.Config
+
+	// Add these fields
+	EVM     evmserverconfig.EVMConfig
+	JSONRPC evmserverconfig.JSONRPCConfig
+	TLS     evmserverconfig.TLSConfig
+}
+
+// Update initAppConfig
+func initAppConfig() (string, interface{}) {
+	srvCfg := serverconfig.DefaultConfig()
+
+	// add the custom app config:
+	customAppConfig := CustomAppConfig{
+		Config:  *srvCfg,
+		EVM:     *evmserverconfig.DefaultEVMConfig(),
+		JSONRPC: *evmserverconfig.DefaultJSONRPCConfig(),
+		TLS:     *evmserverconfig.DefaultTLSConfig(),
+	}
+
+	srvCfg.MinGasPrices = "0ucose"
+
+	// Add EVM template to existing config
+	customAppTemplate := serverconfig.DefaultConfigTemplate +
+		evmserverconfig.DefaultEVMConfigTemplate
+
+	return customAppTemplate, customAppConfig
+}
 
 func initRootCmd(rootCmd *cobra.Command, txConfig client.TxConfig, basicManager module.BasicManager) {
 	cfg := sdk.GetConfig()
@@ -40,7 +77,12 @@ func initRootCmd(rootCmd *cobra.Command, txConfig client.TxConfig, basicManager 
 		snapshot.Cmd(newApp),
 	)
 
-	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, appExport, func(startCmd *cobra.Command) {})
+	evmserver.AddCommands(
+		rootCmd,
+		evmserver.NewDefaultStartOptions(newApp, app.DefaultNodeHome),
+		appExport,
+		func(startCmd *cobra.Command) {},
+	)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -49,7 +91,15 @@ func initRootCmd(rootCmd *cobra.Command, txConfig client.TxConfig, basicManager 
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
+		evmcmd.KeyCommands(app.DefaultNodeHome, true),
 	)
+
+	// Add tx flags
+	var err error
+	rootCmd, err = srvflags.AddTxFlags(rootCmd)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func queryCommand() *cobra.Command {
