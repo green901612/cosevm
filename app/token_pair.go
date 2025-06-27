@@ -2,7 +2,6 @@ package app
 
 import (
 	erc20types "github.com/cosmos/evm/x/erc20/types"
-	"github.com/green901612/cosevm/app/params"
 )
 
 // WTokenContractMainnet is the WrappedToken contract address for mainnet
@@ -13,7 +12,7 @@ const WTokenContractMainnet = "0xD4949664cD82660AaE99bEdc034a0deA8A0bd517"
 var ExampleTokenPairs = []erc20types.TokenPair{
 	{
 		Erc20Address:  WTokenContractMainnet,
-		Denom:         params.BaseDenom,
+		Denom:         BaseDenom,
 		Enabled:       true,
 		ContractOwner: erc20types.OWNER_MODULE,
 	},

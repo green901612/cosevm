@@ -6,7 +6,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/green901612/cosevm/app/params"
 )
 
 // GenesisState of the blockchain is represented here as a map of raw json
@@ -46,7 +45,7 @@ func NewErc20GenesisState() *erc20types.GenesisState {
 // NOTE: for the example chain implementation we are also adding a default minter.
 func NewMintGenesisState() *minttypes.GenesisState {
 	mintGenState := minttypes.DefaultGenesisState()
-	mintGenState.Params.MintDenom = params.BaseDenom
+	mintGenState.Params.MintDenom = BaseDenom
 
 	return mintGenState
 }

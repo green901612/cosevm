@@ -1,4 +1,4 @@
-package params
+package app
 
 const (
 	// BaseDenom is the denomination of the Cosmos EVM example chain's base coin.

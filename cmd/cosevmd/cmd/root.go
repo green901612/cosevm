@@ -2,57 +2,68 @@ package cmd
 
 import (
 	"os"
-	"time"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
-	"github.com/spf13/cobra"
-
-	"cosmossdk.io/client/v2/autocli"
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/config"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	clientcfg "github.com/cosmos/cosmos-sdk/client/config"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdkserver "github.com/cosmos/cosmos-sdk/server"
+	sdktestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	cosmosevmkeyring "github.com/cosmos/evm/crypto/keyring"
+	"github.com/spf13/cobra"
 
 	"github.com/green901612/cosevm/app"
 )
 
+type emptyAppOptions struct{}
+
+func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
+
+func NoOpEvmAppOptions(_ string) error {
+	return nil
+}
+
 // NewRootCmd creates a new root command for cosevmd. It is called once in the
 // main function.
 func NewRootCmd() *cobra.Command {
-	var (
-		autoCliOpts        autocli.AppOptions
-		moduleBasicManager module.BasicManager
-		clientCtx          client.Context
+	tempApp := app.NewCosevmApp(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		emptyAppOptions{},
+		NoOpEvmAppOptions,
 	)
 
-	if err := depinject.Inject(
-		depinject.Configs(app.AppConfig(),
-			depinject.Supply(
-				log.NewNopLogger(),
-			),
-			depinject.Provide(
-				ProvideClientContext,
-			),
-		),
-		&autoCliOpts,
-		&moduleBasicManager,
-		&clientCtx,
-	); err != nil {
-		panic(err)
+	encodingConfig := sdktestutil.TestEncodingConfig{
+		InterfaceRegistry: tempApp.InterfaceRegistry(),
+		Codec:             tempApp.AppCodec(),
+		TxConfig:          tempApp.GetTxConfig(),
+		Amino:             tempApp.LegacyAmino(),
 	}
+
+	clientCtx := client.Context{}.
+		WithCodec(encodingConfig.Codec).
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithLegacyAmino(encodingConfig.Amino).
+		WithInput(os.Stdin).
+		WithAccountRetriever(authtypes.AccountRetriever{}).
+		WithBroadcastMode(flags.FlagBroadcastMode).
+		WithHomeDir(app.DefaultNodeHome).
+		WithViper(""). // In simapp, we don't use any prefix for env variables.
+		// Cosmos EVM specific setup
+		WithKeyringOptions(cosmosevmkeyring.Option()).
+		WithLedgerHasProtobuf(true)
 
 	rootCmd := &cobra.Command{
 		Use:   "cosevmd",
-		Short: "cosevmd - the minimal chain app",
+		Short: "cosevmd - the evm compatible chain app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -64,62 +75,51 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			clientCtx, err = config.ReadFromClientConfig(clientCtx)
+			clientCtx, err = clientcfg.ReadFromClientConfig(clientCtx)
 			if err != nil {
 				return err
+			}
+
+			// This needs to go after ReadFromClientConfig, as that function
+			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
+			// is only available if the client is online.
+			if !clientCtx.Offline {
+				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL) //nolint:gocritic
+				txConfigOpts := tx.ConfigOptions{
+					EnabledSignModes:           enabledSignModes,
+					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(clientCtx),
+				}
+				txConfig, err := tx.NewTxConfigWithOptions(
+					clientCtx.Codec,
+					txConfigOpts,
+				)
+				if err != nil {
+					return err
+				}
+
+				clientCtx = clientCtx.WithTxConfig(txConfig)
 			}
 
 			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
 			}
 
-			// overwrite the minimum gas price from the app configuration
-			srvCfg := serverconfig.DefaultConfig()
-			srvCfg.MinGasPrices = "0mini"
+			customAppTemplate, customAppConfig := initAppConfig()
+			customTMConfig := initTendermintConfig()
 
-			// overwrite the block timeout
-			cmtCfg := cmtcfg.DefaultConfig()
-			cmtCfg.Consensus.TimeoutCommit = 3 * time.Second
-			cmtCfg.LogLevel = "*:error,p2p:info,state:info" // better default logging
-
-			return server.InterceptConfigsPreRunHandler(cmd, serverconfig.DefaultConfigTemplate, srvCfg, cmtCfg)
+			return sdkserver.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customTMConfig)
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, moduleBasicManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, tempApp.BasicModuleManager)
+
+	autoCliOpts := tempApp.AutoCliOpts()
+	clientCtx, _ = clientcfg.ReadFromClientConfig(clientCtx)
+	autoCliOpts.ClientCtx = clientCtx
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 
 	return rootCmd
-}
-
-func ProvideClientContext(
-	appCodec codec.Codec,
-	interfaceRegistry codectypes.InterfaceRegistry,
-	txConfigOpts tx.ConfigOptions,
-	legacyAmino *codec.LegacyAmino,
-) client.Context {
-	clientCtx := client.Context{}.
-		WithCodec(appCodec).
-		WithInterfaceRegistry(interfaceRegistry).
-		WithLegacyAmino(legacyAmino).
-		WithInput(os.Stdin).
-		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(app.DefaultNodeHome).
-		WithViper("MINI") // env variable prefix
-
-	// Read the config again to overwrite the default values with the values from the config file
-	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
-
-	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
-	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
-	txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
-	if err != nil {
-		panic(err)
-	}
-	clientCtx = clientCtx.WithTxConfig(txConfig)
-
-	return clientCtx
 }

@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/green901612/cosevm/app/params"
 )
 
 // EVMOptionsFn defines a function type for setting app options specifically for
@@ -27,9 +26,9 @@ var sealed = false
 // that allows initializing the app with different coin info based on the
 // chain id
 var ChainsCoinInfo = map[string]evmtypes.EvmCoinInfo{
-	params.EighteenDecimalsChainID: {
-		Denom:        params.BaseDenom,
-		DisplayDenom: params.DisplayDenom,
+	EighteenDecimalsChainID: {
+		Denom:        BaseDenom,
+		DisplayDenom: DisplayDenom,
 		Decimals:     evmtypes.EighteenDecimals,
 	},
 }
@@ -42,7 +41,7 @@ func EVMAppOptions(chainID string) error {
 	}
 
 	if chainID == "" {
-		chainID = params.EighteenDecimalsChainID
+		chainID = EighteenDecimalsChainID
 	}
 
 	id := strings.Split(chainID, "-")[0]
