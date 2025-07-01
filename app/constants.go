@@ -2,7 +2,7 @@ package app
 
 const (
 	// BaseDenom is the denomination of the Cosmos EVM example chain's base coin.
-	BaseDenom = "cose"
+	BaseDenom = "ucose"
 
 	// DisplayDenom is the display denomination of the Cosmos EVM example chain's base coin.
 	DisplayDenom = "cose"
@@ -13,5 +13,5 @@ const (
 	// SixDecimalsChainID is the chain ID for the 6 decimals chain.
 	SixDecimalsChainID = "cosevm_2929-2"
 
-	CosmosChainID = "cosevm_2929"
+	CosmosChainID = "cosevm_929"
 )

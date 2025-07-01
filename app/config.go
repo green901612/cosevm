@@ -31,6 +31,11 @@ var ChainsCoinInfo = map[string]evmtypes.EvmCoinInfo{
 		DisplayDenom: DisplayDenom,
 		Decimals:     evmtypes.EighteenDecimals,
 	},
+	CosmosChainID: {
+		Denom:        BaseDenom,
+		DisplayDenom: DisplayDenom,
+		Decimals:     evmtypes.EighteenDecimals,
+	},
 }
 
 // EVMAppOptions allows to setup the global configuration
